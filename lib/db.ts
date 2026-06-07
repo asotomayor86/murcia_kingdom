@@ -18,6 +18,8 @@ export function sql(): NeonQueryFunction<false, false> {
   if (!url) {
     throw new Error('DATABASE_URL no está definida.');
   }
-  cliente = neon(url);
+  // `cache: 'no-store'` evita que Next.js cachee el fetch interno del driver:
+  // sin esto, las consultas SELECT idénticas devuelven resultados obsoletos.
+  cliente = neon(url, { fetchOptions: { cache: 'no-store' } });
   return cliente;
 }
