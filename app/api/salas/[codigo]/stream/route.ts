@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic';
 // navegador reconecte (EventSource reconecta solo). Por debajo de los límites
 // de funciones de Vercel.
 const VIDA_MAX_MS = 45_000;
-const INTERVALO_MS = 1_500;
+const INTERVALO_MS = 500;
 
 function normalizar(codigo: string): string | null {
   const c = (codigo ?? '').toUpperCase();
@@ -43,17 +43,26 @@ export async function GET(
 
       try {
         while (!cerrado && Date.now() - inicio < VIDA_MAX_MS) {
-          const filas = await sql()`
-            select estado, version from partidas where codigo = ${codigo}
+          // Sondeo barato: solo la versión (consulta diminuta). El estado completo
+          // (que puede pesar cientos de KB con las barajas) solo se descarga y se
+          // envía cuando la versión ha cambiado.
+          const versiones = await sql()`
+            select version from partidas where codigo = ${codigo}
           `;
-          if (filas.length === 0) {
+          if (versiones.length === 0) {
             enviar('no-existe', {});
             break;
           }
-          const fila = filas[0] as { estado: unknown; version: number };
-          if (fila.version !== ultimaVersion) {
-            ultimaVersion = fila.version;
-            enviar('estado', { estado: fila.estado, version: fila.version });
+          const version = (versiones[0] as { version: number }).version;
+          if (version !== ultimaVersion) {
+            const filas = await sql()`
+              select estado, version from partidas where codigo = ${codigo}
+            `;
+            if (filas.length > 0) {
+              const fila = filas[0] as { estado: unknown; version: number };
+              ultimaVersion = fila.version;
+              enviar('estado', { estado: fila.estado, version: fila.version });
+            }
           }
           await new Promise((r) => setTimeout(r, INTERVALO_MS));
         }

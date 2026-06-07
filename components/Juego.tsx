@@ -66,6 +66,8 @@ export function Juego({ onSalir, banner }: Props) {
     duenoDefensor: IndiceJugador;
   } | null>(null);
   const numeroIdRef = useRef(0);
+  // Foto de tropas para animar "+N" flotante al colocar refuerzos / colocación inicial.
+  const fichasRefuerzoRef = useRef<Record<TerritorioId, number> | null>(null);
 
   // 0. Al iniciar una batalla, fotografiar las tropas implicadas (estado previo).
   useEffect(() => {
@@ -181,6 +183,45 @@ export function Juego({ onSalir, banner }: Props) {
       }
     }
   }, [partida?.preguntaActiva, partida?.conquistaPendiente, partida?.ocupacion]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // 3. Refuerzos: "+N" flotante por cada territorio donde aumentan las tropas.
+  // Funciona para el jugador que coloca y para el rival que lo observa (online),
+  // porque se basa en el diff del estado. Solo en fases de colocación (en ataques
+  // los cambios de tropas ya los animan los números de combate).
+  useEffect(() => {
+    if (!partida) return;
+    const actual = partida.ocupacion;
+    const previa = fichasRefuerzoRef.current;
+    const enColocacion =
+      partida.fase === 'refuerzos' || partida.fase === 'colocacion-inicial';
+    if (previa && enColocacion) {
+      const nums: NumeroCombate[] = [];
+      for (const id of Object.keys(actual) as TerritorioId[]) {
+        const antes = previa[id];
+        if (antes === undefined) continue;
+        const delta = actual[id].fichas - antes;
+        if (delta > 0) {
+          nums.push({
+            key: ++numeroIdRef.current,
+            territorio: id,
+            texto: `+${delta}`,
+            tipo: 'gano',
+          });
+        }
+      }
+      if (nums.length > 0) {
+        setNumerosCombate((prev) => [...prev, ...nums]);
+        const keys = new Set(nums.map((n) => n.key));
+        setTimeout(() => {
+          setNumerosCombate((prev) => prev.filter((n) => !keys.has(n.key)));
+        }, 1600);
+      }
+    }
+    // Actualizar la foto para el siguiente diff (siempre, en cualquier fase).
+    const snap = {} as Record<TerritorioId, number>;
+    for (const id of Object.keys(actual) as TerritorioId[]) snap[id] = actual[id].fichas;
+    fichasRefuerzoRef.current = snap;
+  }, [partida?.ocupacion, partida?.fase]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     setOrigenSeleccionado(null);
