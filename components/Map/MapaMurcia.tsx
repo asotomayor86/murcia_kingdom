@@ -106,9 +106,19 @@ function MarchaAtaque({
             transition: `transform 1s ease-in-out ${p.delay}s`,
           }}
         >
-          <line x1={0} y1={-15} x2={0} y2={11} stroke="#3d2817" strokeWidth={2.2} strokeLinecap="round" />
-          <circle cx={0} cy={-15} r={2.1} fill="#3d2817" />
-          <path d="M0,-14 L17,-9.5 L0,-5 Z" fill={color} stroke="#3d2817" strokeWidth={1.1} strokeLinejoin="round" />
+          {/* Asta: contorno oscuro con relleno blanco encima (look de los números). */}
+          <line x1={0} y1={-15} x2={0} y2={11} stroke="#2d1a0a" strokeWidth={4.2} strokeLinecap="round" />
+          <line x1={0} y1={-15} x2={0} y2={11} stroke="#ffffff" strokeWidth={1.8} strokeLinecap="round" />
+          {/* Remate y bandera, blancos con contorno oscuro. */}
+          <circle cx={0} cy={-15} r={2.5} fill="#ffffff" stroke="#2d1a0a" strokeWidth={1.4} />
+          <path
+            d="M0,-14 L18,-9.5 L0,-5 Z"
+            fill="#ffffff"
+            stroke="#2d1a0a"
+            strokeWidth={2}
+            strokeLinejoin="round"
+            paintOrder="stroke"
+          />
         </g>
       ))}
     </g>
