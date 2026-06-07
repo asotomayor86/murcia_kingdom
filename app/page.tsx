@@ -31,12 +31,10 @@ export default function PaginaMenu() {
   const [modal, setModal] = useState<Modal>(null);
   const [nombre1, setNombre1] = useState('');
   const [nombre2, setNombre2] = useState('');
-  const [nombreOnline, setNombreOnline] = useState('');
   const [codigoUnirse, setCodigoUnirse] = useState('');
   const [barajas, setBarajas] = useState<InfoBaraja[]>([]);
   const [barajaJ1, setBarajaJ1] = useState<string>('');
   const [barajaJ2, setBarajaJ2] = useState<string>('');
-  const [barajaOnline, setBarajaOnline] = useState<string>('');
   const [duracionLocal, setDuracionLocal] = useState<string>('15');
   const [duracionOnline, setDuracionOnline] = useState<string>('15');
   const [repartoAleatorio, setRepartoAleatorio] = useState(false);
@@ -58,7 +56,6 @@ export default function PaginaMenu() {
         if (bs.length > 0) {
           if (!barajaJ1) setBarajaJ1(bs[0].archivo);
           if (!barajaJ2) setBarajaJ2(bs[0].archivo);
-          if (!barajaOnline) setBarajaOnline(bs[0].archivo);
         }
       })
       .catch((e) => setError(String(e?.message ?? e)));
@@ -98,19 +95,24 @@ export default function PaginaMenu() {
 
   const crearOnline = async () => {
     setError(null);
-    if (!nombreOnline.trim()) {
-      setError('Introduce tu nombre.');
+    if (!nombre1.trim() || !nombre2.trim()) {
+      setError('Introduce los dos nombres.');
       return;
     }
-    if (!barajaOnline) {
-      setError('Selecciona una baraja.');
+    if (!barajaJ1 || !barajaJ2) {
+      setError('Selecciona una baraja para cada jugador.');
       return;
     }
     try {
       setTrabajando(true);
-      const baraja = await cargarBaraja(barajaOnline);
+      const [b1, b2] =
+        barajaJ1 === barajaJ2
+          ? await cargarBaraja(barajaJ1).then((b) => [b, b] as const)
+          : await Promise.all([cargarBaraja(barajaJ1), cargarBaraja(barajaJ2)]);
       const codigo = generarCodigoSala();
-      iniciarSalaOnline(nombreOnline, baraja, codigo, duracionALimite(duracionOnline), repartoAleatorio);
+      iniciarSalaOnline(
+        nombre1, b1, nombre2, b2, codigo, duracionALimite(duracionOnline), repartoAleatorio,
+      );
       const estado = useStore.getState().partida;
       if (!estado) throw new Error('No se pudo iniciar la partida.');
       await crearSala(codigo, estado);
@@ -252,28 +254,53 @@ export default function PaginaMenu() {
       >
         <div className="space-y-4">
           <p className="text-sm text-sepiaOscuro/80">
-            Crearás una sala con un código único. Compártelo con tu rival para que se una.
+            Configura a los <strong>dos jugadores</strong> (nombres y barajas). Tú jugarás
+            como Jugador 1 (azul). Crearás una sala con un código único: compártelo con tu
+            rival, que verá esta configuración pero no podrá cambiarla.
           </p>
-          <label className="block">
-            <span className="text-sm text-sepiaOscuro">Tu nombre (jugador 1, azul)</span>
-            <input
-              type="text"
-              maxLength={20}
-              value={nombreOnline}
-              onChange={(e) => setNombreOnline(e.target.value)}
-              className="mt-1 w-full rounded border border-sepia bg-pergamino px-3 py-2 text-sepiaOscuro outline-none focus:ring-2 focus:ring-sepia/40"
-              placeholder="Tu nombre"
-            />
-          </label>
-          <SelectorBaraja
-            barajas={barajas}
-            valor={barajaOnline}
-            onCambio={setBarajaOnline}
-            etiqueta="Tu baraja (la que se usa cuando defiendes)"
-          />
           <p className="text-xs text-sepiaOscuro/70">
-            Tu rival elegirá su propia baraja al unirse.
+            La baraja de cada jugador se usa <em>cuando ese jugador defiende</em>.
           </p>
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+            <div className="space-y-3 rounded border border-jugador0/40 bg-pergamino p-3">
+              <label className="block">
+                <span className="text-sm font-semibold text-jugador0">Jugador 1 (azul) · tú</span>
+                <input
+                  type="text"
+                  maxLength={20}
+                  value={nombre1}
+                  onChange={(e) => setNombre1(e.target.value)}
+                  className="mt-1 w-full rounded border border-sepia bg-pergamino px-3 py-2 text-sepiaOscuro outline-none focus:ring-2 focus:ring-sepia/40"
+                  placeholder="Nombre"
+                />
+              </label>
+              <SelectorBaraja
+                barajas={barajas}
+                valor={barajaJ1}
+                onCambio={setBarajaJ1}
+                etiqueta="Baraja al defender"
+              />
+            </div>
+            <div className="space-y-3 rounded border border-jugador1/40 bg-pergamino p-3">
+              <label className="block">
+                <span className="text-sm font-semibold text-jugador1">Jugador 2 (rojo) · rival</span>
+                <input
+                  type="text"
+                  maxLength={20}
+                  value={nombre2}
+                  onChange={(e) => setNombre2(e.target.value)}
+                  className="mt-1 w-full rounded border border-sepia bg-pergamino px-3 py-2 text-sepiaOscuro outline-none focus:ring-2 focus:ring-sepia/40"
+                  placeholder="Nombre"
+                />
+              </label>
+              <SelectorBaraja
+                barajas={barajas}
+                valor={barajaJ2}
+                onCambio={setBarajaJ2}
+                etiqueta="Baraja al defender"
+              />
+            </div>
+          </div>
           <SelectorDuracion valor={duracionOnline} onCambio={setDuracionOnline} />
           <CasillaRepartoAleatorio valor={repartoAleatorio} onCambio={setRepartoAleatorio} />
           {error && <p className="rounded bg-red-100 p-2 text-sm text-red-900">{error}</p>}

@@ -86,6 +86,12 @@ export interface ConquistaPendiente {
 export interface EstadoPartida {
   version: 3;
   jugadores: [Jugador, Jugador];
+  /**
+   * En partidas online indica si el segundo jugador ya reclamó su asiento.
+   * En partidas locales siempre es `true` (ambos jugadores presentes desde el
+   * inicio). El anfitrión configura nombres y barajas de los dos jugadores.
+   */
+  jugador2Unido: boolean;
   turnoActual: IndiceJugador;
   /** Jugador que abrió la primera ronda (para contar rondas completas). */
   jugadorInicial: IndiceJugador;

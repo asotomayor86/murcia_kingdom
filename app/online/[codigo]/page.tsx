@@ -14,7 +14,6 @@ import {
   type SuscripcionSala,
 } from '@/lib/online';
 import { onlineDisponible } from '@/lib/config';
-import { cargarBaraja, listarBarajas, type InfoBaraja } from '@/lib/cargarBaraja';
 import type { EstadoPartida } from '@/lib/tipos';
 import { COLOR_JUGADOR } from '@/lib/territorios';
 
@@ -40,10 +39,7 @@ export default function PaginaOnline() {
   const salirDeSala = useStore((s) => s.salirDeSala);
 
   const [estadoUI, setEstadoUI] = useState<EstadoCarga>({ tipo: 'cargando' });
-  const [nombreUnirse, setNombreUnirse] = useState('');
   const [uniendo, setUniendo] = useState(false);
-  const [barajasDisponibles, setBarajasDisponibles] = useState<InfoBaraja[]>([]);
-  const [barajaUnirse, setBarajaUnirse] = useState<string>('');
   const suscripcionRef = useRef<SuscripcionSala | null>(null);
 
   useEffect(() => {
@@ -66,13 +62,11 @@ export default function PaginaOnline() {
         if (sesion) {
           cargarSalaOnline(codigo, sesion.miIndice, estado);
           setEstadoUI({ tipo: 'jugando' });
+        } else if (!estado.jugador2Unido) {
+          // El asiento del jugador 2 sigue libre: mostramos la configuración para confirmar.
+          setEstadoUI({ tipo: 'unirse', estado });
         } else {
-          // El segundo jugador todavía no se ha unido si su nombre es el placeholder.
-          if (estado.jugadores[1].nombre === 'Esperando jugador…') {
-            setEstadoUI({ tipo: 'unirse', estado });
-          } else {
-            setEstadoUI({ tipo: 'error', mensaje: 'La sala ya está completa.' });
-          }
+          setEstadoUI({ tipo: 'error', mensaje: 'La sala ya está completa.' });
         }
       } catch (e: unknown) {
         setEstadoUI({
@@ -86,18 +80,6 @@ export default function PaginaOnline() {
       cancelado = true;
     };
   }, [codigo, cargarSalaOnline]);
-
-  // Cargar barajas disponibles cuando llegamos al formulario de unirse.
-  useEffect(() => {
-    if (estadoUI.tipo !== 'unirse') return;
-    if (barajasDisponibles.length > 0) return;
-    listarBarajas()
-      .then((bs) => {
-        setBarajasDisponibles(bs);
-        if (bs.length > 0 && !barajaUnirse) setBarajaUnirse(bs[0].archivo);
-      })
-      .catch(() => undefined);
-  }, [estadoUI.tipo, barajasDisponibles.length, barajaUnirse]);
 
   // Suscripción a Realtime cuando empezamos a jugar.
   useEffect(() => {
@@ -114,14 +96,10 @@ export default function PaginaOnline() {
 
   const onUnirme = async () => {
     if (estadoUI.tipo !== 'unirse') return;
-    const nombre = nombreUnirse.trim();
-    if (!nombre) return;
-    if (!barajaUnirse) return;
     setUniendo(true);
     try {
-      const baraja2 = await cargarBaraja(barajaUnirse);
       guardarSesion(codigo, 1);
-      await unirseSalaOnline(codigo, nombre, baraja2, 1, estadoUI.estado);
+      await unirseSalaOnline(codigo, 1, estadoUI.estado);
       setEstadoUI({ tipo: 'jugando' });
     } catch (e: unknown) {
       olvidarSesion(codigo);
@@ -195,6 +173,9 @@ export default function PaginaOnline() {
   }
 
   if (estadoUI.tipo === 'unirse') {
+    const cfg = estadoUI.estado;
+    const duracionTexto =
+      cfg.limiteRondas === null ? 'Sin límite (conquista total)' : `${cfg.limiteRondas} rondas`;
     return (
       <main className="flex min-h-screen items-center justify-center p-4">
         <div className="w-full max-w-md rounded-lg border-2 border-sepia bg-pergamino p-6">
@@ -202,50 +183,42 @@ export default function PaginaOnline() {
           <p className="mt-2 text-center text-sm text-sepiaOscuro/80">
             Código: <span className="font-mono font-bold">{codigo}</span>
           </p>
-          <p className="mt-2 text-center text-sm text-sepiaOscuro/80">
-            Te enfrentarás a <span className="font-semibold">{estadoUI.estado.jugadores[0].nombre}</span>.
+          <p className="mt-3 text-center text-xs text-sepiaOscuro/70">
+            El anfitrión ya ha configurado la partida. Revísala y entra: jugarás como
+            Jugador 2 (rojo).
           </p>
-          <label className="mt-4 block">
-            <span className="text-sm text-sepiaOscuro">Tu nombre</span>
-            <input
-              type="text"
-              maxLength={20}
-              value={nombreUnirse}
-              onChange={(e) => setNombreUnirse(e.target.value)}
-              className="mt-1 w-full rounded border border-sepia bg-pergamino px-3 py-2 text-sepiaOscuro outline-none focus:ring-2 focus:ring-sepia/40"
-              placeholder="Nombre del jugador 2"
-            />
-          </label>
-          <label className="mt-4 block">
-            <span className="text-sm text-sepiaOscuro">
-              Tu baraja (la que se usa cuando defiendes)
-            </span>
-            <select
-              value={barajaUnirse}
-              onChange={(e) => setBarajaUnirse(e.target.value)}
-              className="mt-1 w-full rounded border border-sepia bg-pergamino px-3 py-2 text-sepiaOscuro outline-none focus:ring-2 focus:ring-sepia/40"
-            >
-              {barajasDisponibles.length === 0 ? (
-                <option value="">Cargando…</option>
-              ) : (
-                barajasDisponibles.map((b) => (
-                  <option key={b.archivo} value={b.archivo}>
-                    {b.deck_name}
-                  </option>
-                ))
-              )}
-            </select>
-          </label>
+          <div className="mt-4 space-y-3">
+            <div className="rounded border border-jugador0/40 bg-pergamino p-3">
+              <p className="text-sm font-semibold text-jugador0">Jugador 1 (azul)</p>
+              <p className="mt-1 text-sepiaOscuro">{cfg.jugadores[0].nombre}</p>
+              <p className="mt-1 text-xs text-sepiaOscuro/70">
+                Baraja al defender: <span className="font-medium">{cfg.barajas[0].deck_name}</span>
+              </p>
+            </div>
+            <div className="rounded border border-jugador1/40 bg-pergamino p-3">
+              <p className="text-sm font-semibold text-jugador1">Jugador 2 (rojo) · tú</p>
+              <p className="mt-1 text-sepiaOscuro">{cfg.jugadores[1].nombre}</p>
+              <p className="mt-1 text-xs text-sepiaOscuro/70">
+                Baraja al defender: <span className="font-medium">{cfg.barajas[1].deck_name}</span>
+              </p>
+            </div>
+            <p className="text-xs text-sepiaOscuro/70">
+              Duración: <span className="font-medium">{duracionTexto}</span>
+              {' · '}
+              Reparto inicial:{' '}
+              <span className="font-medium">
+                {cfg.fichasPorColocarInicial[0] === 0 && cfg.fichasPorColocarInicial[1] === 0
+                  ? 'aleatorio'
+                  : 'manual'}
+              </span>
+            </p>
+          </div>
           <div className="mt-5 flex justify-end gap-2">
             <Boton variante="fantasma" onClick={() => router.replace('/')} disabled={uniendo}>
               Cancelar
             </Boton>
-            <Boton
-              variante="primario"
-              onClick={onUnirme}
-              disabled={uniendo || !nombreUnirse.trim() || !barajaUnirse}
-            >
-              {uniendo ? 'Uniéndose…' : 'Entrar'}
+            <Boton variante="primario" onClick={onUnirme} disabled={uniendo}>
+              {uniendo ? 'Uniéndose…' : 'Unirme a la partida'}
             </Boton>
           </div>
         </div>
@@ -262,7 +235,7 @@ export default function PaginaOnline() {
     );
   }
 
-  const esperandoRival = partida.jugadores[1].nombre === 'Esperando jugador…';
+  const esperandoRival = !partida.jugador2Unido;
 
   const salir = () => {
     olvidarSesion(codigo);
@@ -279,6 +252,10 @@ export default function PaginaOnline() {
       <main className="flex min-h-screen items-center justify-center p-4">
         <div className="max-w-md rounded-lg border-2 border-sepia bg-pergamino p-6 text-center">
           <h2 className="font-title text-2xl text-sepiaOscuro">Esperando rival…</h2>
+          <p className="mt-2 text-sm text-sepiaOscuro/80">
+            Esperando a que <span className="font-semibold">{partida.jugadores[1].nombre}</span>{' '}
+            se una.
+          </p>
           <p className="mt-3 text-sm text-sepiaOscuro/80">Comparte este código:</p>
           <div className="mt-2 rounded border-2 border-dashed border-sepia bg-pergaminoOscuro/40 p-3 font-mono text-2xl tracking-widest text-sepiaOscuro">
             {codigo}

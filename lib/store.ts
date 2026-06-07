@@ -54,19 +54,20 @@ interface AccionesStore {
   cargarDesdeAlmacenamiento: () => boolean;
   abandonarPartida: () => void;
 
-  // Online
+  // Online. El anfitrión configura nombres y barajas de AMBOS jugadores.
   iniciarSalaOnline: (
     nombre1: string,
     baraja1: Baraja,
+    nombre2: string,
+    baraja2: Baraja,
     codigo: string,
     limiteRondas: number | null,
     repartoAleatorio: boolean,
   ) => void;
   cargarSalaOnline: (codigo: string, miIndice: IndiceJugador, estado: EstadoPartida) => void;
+  // El segundo jugador solo reclama su asiento; no cambia nombres ni barajas.
   unirseSalaOnline: (
     codigo: string,
-    nombre2: string,
-    baraja2: Baraja,
     miIndice: IndiceJugador,
     estado: EstadoPartida,
   ) => Promise<void>;
@@ -293,6 +294,7 @@ function construirEstadoInicial(
   return {
     version: 3,
     jugadores,
+    jugador2Unido: true,
     turnoActual: inicial,
     jugadorInicial: inicial,
     limiteRondas,
@@ -362,13 +364,13 @@ export const useStore = create<Store>((set, get) => {
       set({ partida: null, modo: 'local', codigoSala: null, miIndice: null });
     },
 
-    iniciarSalaOnline: (nombre1, baraja1, codigo, limiteRondas, repartoAleatorio) => {
-      // Crea el estado con "Jugador 2" como placeholder hasta que se una.
-      // La baraja del jugador 2 será reemplazada cuando se una; entretanto usamos baraja1
-      // como relleno (no se sortean preguntas durante la colocación inicial).
-      const estado = construirEstadoInicial(
-        nombre1, 'Esperando jugador…', baraja1, baraja1, limiteRondas, repartoAleatorio,
+    iniciarSalaOnline: (nombre1, baraja1, nombre2, baraja2, codigo, limiteRondas, repartoAleatorio) => {
+      // El anfitrión define ya los dos jugadores y las dos barajas. El estado
+      // queda completo; solo falta que el segundo jugador reclame su asiento.
+      const base = construirEstadoInicial(
+        nombre1, nombre2, baraja1, baraja2, limiteRondas, repartoAleatorio,
       );
+      const estado: EstadoPartida = { ...base, jugador2Unido: false };
       set({
         partida: estado,
         modo: 'online',
@@ -386,13 +388,10 @@ export const useStore = create<Store>((set, get) => {
       });
     },
 
-    unirseSalaOnline: async (codigo, nombre2, baraja2, miIndice, estado) => {
-      const jugadores: [Jugador, Jugador] = [
-        estado.jugadores[0],
-        { ...estado.jugadores[1], nombre: nombre2.trim().slice(0, 20) },
-      ];
-      const barajas: [Baraja, Baraja] = [estado.barajas[0], baraja2];
-      const nuevo: EstadoPartida = { ...estado, jugadores, barajas };
+    unirseSalaOnline: async (codigo, miIndice, estado) => {
+      // El segundo jugador acepta la configuración del anfitrión: solo marca
+      // que se ha unido. Nombres y barajas no se tocan.
+      const nuevo: EstadoPartida = { ...estado, jugador2Unido: true };
       set({
         partida: nuevo,
         modo: 'online',
