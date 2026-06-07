@@ -1,6 +1,6 @@
 'use client';
 
-import type { EstadoPartida, IndiceJugador } from './tipos';
+import type { Baraja, EstadoPartida, IndiceJugador } from './tipos';
 
 const ALFABETO = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 const CLAVE_SESION = 'risk-murcia:online-sesiones-v1';
@@ -60,11 +60,25 @@ async function leerError(res: Response): Promise<string> {
   }
 }
 
+// Las barajas (con sus ~1000 preguntas) son inmutables y pesan cientos de KB.
+// Para que cada jugada sincronice rápido, se guardan UNA sola vez (columna
+// aparte) y el estado que se transmite va "ligero": sin las preguntas.
+function aligerarEstado(estado: EstadoPartida): EstadoPartida {
+  return {
+    ...estado,
+    barajas: [
+      { ...estado.barajas[0], questions: [] },
+      { ...estado.barajas[1], questions: [] },
+    ],
+  };
+}
+
 export async function crearSala(codigo: string, estado: EstadoPartida): Promise<void> {
+  // Enviamos el estado ligero + las barajas completas por separado (se guardan una vez).
   const res = await fetch('/api/salas', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ codigo, estado }),
+    body: JSON.stringify({ codigo, estado: aligerarEstado(estado), barajas: estado.barajas }),
   });
   if (!res.ok) throw new Error(await leerError(res));
 }
@@ -75,8 +89,14 @@ export async function obtenerEstadoSala(codigo: string): Promise<EstadoPartida |
   });
   if (res.status === 404) return null;
   if (!res.ok) throw new Error(await leerError(res));
-  const data = (await res.json()) as { estado: EstadoPartida };
-  return data.estado;
+  const data = (await res.json()) as {
+    estado: EstadoPartida;
+    barajas?: [Baraja, Baraja] | null;
+  };
+  const estado = data.estado;
+  // Reconstruimos las barajas completas (columna aparte) sobre el estado ligero.
+  if (data.barajas) estado.barajas = data.barajas;
+  return estado;
 }
 
 export async function actualizarEstadoSala(
@@ -86,7 +106,7 @@ export async function actualizarEstadoSala(
   const res = await fetch(`/api/salas/${encodeURIComponent(codigo)}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ estado }),
+    body: JSON.stringify({ estado: aligerarEstado(estado) }),
   });
   if (!res.ok) throw new Error(await leerError(res));
 }

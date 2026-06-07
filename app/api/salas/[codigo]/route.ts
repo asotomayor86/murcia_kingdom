@@ -18,13 +18,17 @@ export async function GET(
     if (!codigo) return NextResponse.json({ error: 'Código inválido.' }, { status: 400 });
 
     const filas = await sql()`
-      select estado, version from partidas where codigo = ${codigo}
+      select estado, barajas, version from partidas where codigo = ${codigo}
     `;
     if (filas.length === 0) {
       return NextResponse.json({ error: 'no-existe' }, { status: 404 });
     }
-    const fila = filas[0] as { estado: unknown; version: number };
-    return NextResponse.json({ estado: fila.estado, version: fila.version });
+    const fila = filas[0] as { estado: unknown; barajas: unknown; version: number };
+    return NextResponse.json({
+      estado: fila.estado,
+      barajas: fila.barajas,
+      version: fila.version,
+    });
   } catch (e: unknown) {
     return NextResponse.json(
       { error: e instanceof Error ? e.message : String(e) },

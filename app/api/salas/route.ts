@@ -6,16 +6,25 @@ export const dynamic = 'force-dynamic';
 
 export async function POST(req: Request) {
   try {
-    const body = (await req.json()) as { codigo?: unknown; estado?: unknown };
+    const body = (await req.json()) as {
+      codigo?: unknown;
+      estado?: unknown;
+      barajas?: unknown;
+    };
     const codigo = typeof body.codigo === 'string' ? body.codigo.toUpperCase() : '';
     const estado = body.estado;
+    const barajas = body.barajas ?? null;
     if (!codigo || !/^[A-Z0-9]{4,12}$/.test(codigo) || estado == null) {
       return NextResponse.json({ error: 'Datos inválidos.' }, { status: 400 });
     }
 
     const filas = await sql()`
-      insert into partidas (codigo, estado)
-      values (${codigo}, ${JSON.stringify(estado)}::jsonb)
+      insert into partidas (codigo, estado, barajas)
+      values (
+        ${codigo},
+        ${JSON.stringify(estado)}::jsonb,
+        ${barajas === null ? null : JSON.stringify(barajas)}::jsonb
+      )
       on conflict (codigo) do nothing
       returning codigo
     `;

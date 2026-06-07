@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic';
 // navegador reconecte (EventSource reconecta solo). Por debajo de los límites
 // de funciones de Vercel.
 const VIDA_MAX_MS = 45_000;
-const INTERVALO_MS = 500;
+const INTERVALO_MS = 300;
 
 function normalizar(codigo: string): string | null {
   const c = (codigo ?? '').toUpperCase();

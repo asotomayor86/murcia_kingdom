@@ -35,12 +35,16 @@ En la consola SQL de Neon (o `psql`) ejecuta:
 create table if not exists partidas (
   codigo     text primary key,
   estado     jsonb not null,
+  barajas    jsonb,
   version    integer not null default 0,
   updated_at timestamptz not null default now()
 );
 ```
 
 > No hace falta RLS ni políticas: la base de datos solo se toca desde el servidor.
+> La columna `barajas` guarda las dos barajas (inmutables) una sola vez, para que
+> el `estado` que se sincroniza en cada jugada vaya ligero. `npm run db:init`
+> crea la tabla y migra una base de datos existente de forma idempotente.
 
 ### 2. Configurar variables de entorno en local
 

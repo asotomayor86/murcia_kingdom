@@ -29,6 +29,17 @@ await sql`
   )
 `;
 
+// Las barajas se guardan aparte (una vez) para que el estado sincronizado vaya
+// ligero. Columna idempotente + backfill de partidas existentes.
+await sql`alter table partidas add column if not exists barajas jsonb`;
+const backfill = await sql`
+  update partidas
+  set barajas = estado->'barajas'
+  where barajas is null and estado->'barajas' is not null
+  returning codigo
+`;
+console.log(`Backfill de barajas en partidas existentes: ${backfill.length} fila(s).`);
+
 const filas = await sql`
   select column_name, data_type
   from information_schema.columns

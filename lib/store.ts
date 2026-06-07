@@ -402,7 +402,13 @@ export const useStore = create<Store>((set, get) => {
     },
 
     aplicarEstadoEntrante: (estado) => {
-      set({ partida: estado });
+      // El estado entrante (SSE) viene "ligero": las barajas no traen preguntas.
+      // Conservamos las barajas completas que ya tenemos cargadas en memoria.
+      const actual = get().partida;
+      const entranteLigero = !estado.barajas?.[0]?.questions?.length;
+      const barajas =
+        entranteLigero && actual?.barajas ? actual.barajas : estado.barajas;
+      set({ partida: { ...estado, barajas } });
     },
 
     salirDeSala: () => {
