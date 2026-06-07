@@ -1,0 +1,213 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 740" width="720" height="740" role="img">
+<title>Mapa de conquista de la Región de Murcia</title>
+<desc>Tablero estilo Risk con 26 territorios formados por municipios de la Región de Murcia, con todos los nombres en mayúsculas, en estética de mapa antiguo.</desc>
+
+<style>
+.ttl{font-family:'Times New Roman',Georgia,serif;font-size:30px;font-weight:500;fill:#3d2817;letter-spacing:6px;text-anchor:middle}
+.sub{font-family:'Times New Roman',Georgia,serif;font-size:12px;font-style:italic;fill:#5d3e23;text-anchor:middle;letter-spacing:3px}
+.lbl{font-family:Georgia,'Times New Roman',serif;font-size:11px;font-weight:500;fill:#2d1a0a;text-anchor:middle;letter-spacing:1px}
+.lblbig{font-family:Georgia,'Times New Roman',serif;font-size:13px;font-weight:500;fill:#2d1a0a;text-anchor:middle;letter-spacing:1.5px}
+.lblsm{font-family:Georgia,'Times New Roman',serif;font-size:9px;font-weight:500;fill:#2d1a0a;text-anchor:middle;letter-spacing:0.6px}
+.sea-lbl{font-family:'Times New Roman',serif;font-style:italic;font-size:18px;fill:#2c5466;letter-spacing:6px;text-anchor:middle}
+.cmps{font-family:'Times New Roman',serif;font-size:10px;font-weight:500;fill:#4a2818;text-anchor:middle}
+.lgnd{font-family:Georgia,serif;font-size:10px;fill:#3d2817}
+.lgnd-t{font-family:'Times New Roman',serif;font-size:12px;font-weight:500;fill:#3d2817;text-anchor:middle;letter-spacing:3px}
+.terr{stroke:#5a3818;stroke-width:1.4;stroke-linejoin:round}
+</style>
+
+<rect width="720" height="740" fill="#ead9a8"/>
+
+<g opacity="0.13">
+<ellipse cx="100" cy="110" rx="90" ry="35" fill="#8a6438"/>
+<ellipse cx="620" cy="220" rx="60" ry="45" fill="#8a6438"/>
+<ellipse cx="40" cy="450" rx="35" ry="80" fill="#8a6438"/>
+<ellipse cx="350" cy="710" rx="140" ry="25" fill="#8a6438"/>
+<ellipse cx="600" cy="680" rx="60" ry="20" fill="#8a6438"/>
+<ellipse cx="380" cy="330" rx="50" ry="25" fill="#8a6438"/>
+</g>
+
+<rect x="14" y="14" width="692" height="712" fill="none" stroke="#5a3818" stroke-width="2.5"/>
+<rect x="22" y="22" width="676" height="696" fill="none" stroke="#5a3818" stroke-width="0.6"/>
+
+<g stroke="#5a3818" stroke-width="0.8" fill="none">
+<path d="M22,48 Q30,32 48,22 M30,22 L42,34 M22,34 L34,22"/>
+<path d="M698,48 Q690,32 672,22 M690,22 L678,34 M698,34 L686,22"/>
+<path d="M22,692 Q30,708 48,718 M30,718 L42,706 M22,706 L34,718"/>
+<path d="M698,692 Q690,708 672,718 M690,718 L678,706 M698,706 L686,718"/>
+</g>
+
+<text x="360" y="62" class="ttl">REINO DE MVRCIA</text>
+<text x="360" y="86" class="sub">— Mapa de Conquista en XXVI Territorios —</text>
+<path d="M180,98 Q230,90 280,100 L340,100 M380,100 L440,100 Q490,90 540,98" stroke="#5a3818" stroke-width="0.8" fill="none"/>
+<circle cx="360" cy="100" r="2.5" fill="#5a3818"/>
+<path d="M345,100 L355,100 M365,100 L375,100" stroke="#5a3818" stroke-width="0.8"/>
+
+<polygon class="terr" fill="#9aa867" points="40,118 175,114 180,193 95,206 48,182 38,148"/>
+<polygon class="terr" fill="#9aa867" points="175,114 260,116 262,193 180,193"/>
+<polygon class="terr" fill="#c89968" points="260,116 360,114 358,186 285,198 262,193"/>
+<polygon class="terr" fill="#d4b15c" points="360,114 538,112 545,188 358,186"/>
+<polygon class="terr" fill="#d4b15c" points="538,112 678,116 678,194 545,188"/>
+
+<polygon class="terr" fill="#9aa867" points="48,182 95,206 180,193 165,278 60,278 38,232"/>
+<polygon class="terr" fill="#9aa867" points="180,193 262,193 252,278 165,278"/>
+<polygon class="terr" fill="#c89968" points="262,193 285,198 358,186 340,278 252,278"/>
+<polygon class="terr" fill="#b8c168" points="358,186 410,184 408,275 340,278"/>
+<polygon class="terr" fill="#b8c168" points="410,184 500,184 498,278 408,275"/>
+<polygon class="terr" fill="#b8c168" points="500,184 545,188 580,273 498,278"/>
+<polygon class="terr" fill="#d99878" points="545,188 678,194 678,275 580,273"/>
+
+<polygon class="terr" fill="#b8956a" points="38,232 60,278 165,278 252,278 220,360 50,348"/>
+<polygon class="terr" fill="#d99878" points="252,278 340,278 408,275 400,360 220,360"/>
+<polygon class="terr" fill="#d99878" points="408,275 498,278 580,273 678,275 678,360 400,360"/>
+
+<polygon class="terr" fill="#c89058" points="50,348 220,360 200,460 50,452 38,402"/>
+<polygon class="terr" fill="#c89058" points="220,360 310,362 295,462 200,460"/>
+<polygon class="terr" fill="#c89058" points="310,362 400,360 392,455 295,462"/>
+<polygon class="terr" fill="#b88060" points="400,360 490,360 488,455 392,455"/>
+<polygon class="terr" fill="#b88060" points="490,360 580,356 582,452 488,455"/>
+<polygon class="terr" fill="#a8c0cc" points="580,356 678,360 678,452 582,452"/>
+
+<polygon class="terr" fill="#c89058" points="50,452 158,455 145,548 50,538 38,490"/>
+<polygon class="terr" fill="#9ab0bb" points="158,455 200,460 275,460 268,548 145,548"/>
+<polygon class="terr" fill="#9ab0bb" points="275,460 295,462 392,455 420,548 268,548"/>
+<polygon class="terr" fill="#b88060" points="392,455 488,455 555,548 420,548"/>
+<polygon class="terr" fill="#b88060" points="488,455 582,452 678,452 668,548 555,548"/>
+
+<g stroke="#5a3818" stroke-width="0.7" fill="#7a8a55" opacity="0.85">
+<path d="M70,170 L80,158 L90,170 Z"/>
+<path d="M95,180 L108,166 L121,180 Z"/>
+<path d="M195,168 L207,156 L219,168 Z"/>
+<path d="M75,258 L86,246 L97,258 Z"/>
+<path d="M125,255 L137,243 L149,255 Z"/>
+</g>
+
+<g stroke="#7a5a30" stroke-width="0.6" fill="none" opacity="0.55">
+<path d="M380,135 Q395,128 410,135 Q425,142 440,135"/>
+<path d="M470,150 Q485,145 500,150"/>
+<path d="M560,135 Q578,128 595,135 Q612,142 628,135"/>
+</g>
+
+<path d="M38,538 Q60,548 90,542 Q130,552 168,550 Q210,556 268,554 Q330,560 420,556 Q500,562 555,556 Q620,562 678,550" stroke="#5a3818" stroke-width="2.6" fill="none"/>
+
+<path d="M22,552 Q60,560 90,554 Q130,562 168,560 Q210,566 268,564 Q330,570 420,566 Q500,572 555,566 Q620,572 678,560 L678,612 L22,612 Z" fill="#a4c3cc"/>
+
+<g stroke="#4d7886" stroke-width="0.8" fill="none" opacity="0.6">
+<path d="M50,575 Q70,572 90,575 Q110,578 130,575"/>
+<path d="M180,580 Q200,577 220,580 Q240,583 260,580"/>
+<path d="M310,576 Q330,573 350,576 Q370,579 390,576"/>
+<path d="M440,582 Q460,579 480,582 Q500,585 520,582"/>
+<path d="M100,592 Q120,589 140,592 Q160,595 180,592"/>
+<path d="M250,595 Q270,592 290,595 Q310,598 330,595"/>
+<path d="M380,594 Q400,591 420,594 Q440,597 460,594"/>
+</g>
+
+<g opacity="0.7">
+<path d="M195,587 Q200,584 205,587 L210,584 L208,587 L213,590 L205,590 L195,587 Z" fill="#4d6878" stroke="#3d4858" stroke-width="0.3"/>
+<circle cx="210" cy="586" r="0.6" fill="#ead9a8"/>
+<path d="M520,590 Q525,587 530,590 L535,587 L533,590 L538,593 L530,593 L520,590 Z" fill="#4d6878" stroke="#3d4858" stroke-width="0.3"/>
+<circle cx="535" cy="589" r="0.6" fill="#ead9a8"/>
+</g>
+
+<text x="360" y="592" class="sea-lbl">MARE INTERNVM</text>
+
+<g transform="translate(648,580)">
+<circle r="26" fill="#ead9a8" stroke="#5a3818" stroke-width="0.7"/>
+<polygon points="0,-22 5,-5 22,0 5,5 0,22 -5,5 -22,0 -5,-5" fill="#c9a878" stroke="#5a3818" stroke-width="0.7"/>
+<polygon points="0,-14 3,-3 14,0 3,3 0,14 -3,3 -14,0 -3,-3" fill="#7a5a30" stroke="#5a3818" stroke-width="0.4"/>
+<line x1="0" y1="-22" x2="0" y2="22" stroke="#5a3818" stroke-width="0.4"/>
+<line x1="-22" y1="0" x2="22" y2="0" stroke="#5a3818" stroke-width="0.4"/>
+<circle r="2" fill="#5a3818"/>
+<text x="0" y="-30" class="cmps">N</text>
+<text x="0" y="36" class="cmps">S</text>
+<text x="-30" y="3" class="cmps">O</text>
+<text x="30" y="3" class="cmps">E</text>
+</g>
+
+<text x="110" y="158" class="lblbig">MORATALLA</text>
+<text x="222" y="158" class="lbl">CALASPARRA</text>
+<text x="310" y="158" class="lbl">CIEZA</text>
+<text x="450" y="155" class="lblbig">JUMILLA</text>
+<text x="608" y="158" class="lblbig">YECLA</text>
+
+<text x="110" y="240" class="lbl">CARAVACA</text>
+<text x="213" y="234" class="lblsm">CEHEGÍN</text>
+<text x="213" y="244" class="lblsm">Y BULLAS</text>
+<text x="305" y="234" class="lblsm">VALLE DE</text>
+<text x="305" y="244" class="lblsm">RICOTE</text>
+<text x="378" y="240" class="lblsm">ARCHENA</text>
+<text x="455" y="234" class="lblsm">MOLINA DE</text>
+<text x="455" y="244" class="lblsm">SEGURA</text>
+<text x="540" y="234" class="lblsm">VEGA</text>
+<text x="540" y="244" class="lblsm">MEDIA</text>
+<text x="612" y="234" class="lblsm">SANTOMERA</text>
+<text x="612" y="244" class="lblsm">Y BENIEL</text>
+
+<text x="148" y="324" class="lblbig">MULA</text>
+<text x="314" y="322" class="lbl">ALCANTARILLA</text>
+<text x="540" y="324" class="lblbig">MURCIA</text>
+
+<text x="130" y="412" class="lblbig">LORCA</text>
+<text x="252" y="408" class="lblsm">ALHAMA Y</text>
+<text x="252" y="418" class="lblsm">LIBRILLA</text>
+<text x="348" y="412" class="lbl">TOTANA</text>
+<text x="440" y="408" class="lblsm">FUENTE</text>
+<text x="440" y="418" class="lblsm">ÁLAMO</text>
+<text x="535" y="406" class="lblsm">TORRE-</text>
+<text x="535" y="416" class="lblsm">PACHECO</text>
+<text x="630" y="406" class="lblsm">MAR</text>
+<text x="630" y="416" class="lblsm">MENOR</text>
+
+<text x="100" y="500" class="lblsm">PUERTO</text>
+<text x="100" y="510" class="lblsm">LUMBRERAS</text>
+<text x="213" y="505" class="lbl">ÁGUILAS</text>
+<text x="345" y="505" class="lbl">MAZARRÓN</text>
+<text x="475" y="505" class="lblbig">CARTAGENA</text>
+<text x="615" y="500" class="lblsm">LA</text>
+<text x="615" y="510" class="lblsm">UNIÓN</text>
+
+<g transform="translate(40,628)">
+<text x="320" y="0" class="lgnd-t">— COMARCAS: CONTINENTES —</text>
+<g transform="translate(0,20)">
+<rect width="14" height="14" fill="#d4b15c" stroke="#5a3818" stroke-width="0.5"/>
+<text x="20" y="11" class="lgnd">ALTIPLANO (2)</text>
+</g>
+<g transform="translate(130,20)">
+<rect width="14" height="14" fill="#9aa867" stroke="#5a3818" stroke-width="0.5"/>
+<text x="20" y="11" class="lgnd">NOROESTE (4)</text>
+</g>
+<g transform="translate(260,20)">
+<rect width="14" height="14" fill="#c89968" stroke="#5a3818" stroke-width="0.5"/>
+<text x="20" y="11" class="lgnd">VEGA ALTA (2)</text>
+</g>
+<g transform="translate(390,20)">
+<rect width="14" height="14" fill="#b8956a" stroke="#5a3818" stroke-width="0.5"/>
+<text x="20" y="11" class="lgnd">RÍO MULA (1)</text>
+</g>
+<g transform="translate(510,20)">
+<rect width="14" height="14" fill="#b8c168" stroke="#5a3818" stroke-width="0.5"/>
+<text x="20" y="11" class="lgnd">VEGA MEDIA (3)</text>
+</g>
+<g transform="translate(0,46)">
+<rect width="14" height="14" fill="#d99878" stroke="#5a3818" stroke-width="0.5"/>
+<text x="20" y="11" class="lgnd">HUERTA DE MURCIA (3)</text>
+</g>
+<g transform="translate(130,46)">
+<rect width="14" height="14" fill="#c89058" stroke="#5a3818" stroke-width="0.5"/>
+<text x="20" y="11" class="lgnd">GUADALENTÍN (4)</text>
+</g>
+<g transform="translate(260,46)">
+<rect width="14" height="14" fill="#9ab0bb" stroke="#5a3818" stroke-width="0.5"/>
+<text x="20" y="11" class="lgnd">COSTA CÁLIDA (2)</text>
+</g>
+<g transform="translate(390,46)">
+<rect width="14" height="14" fill="#b88060" stroke="#5a3818" stroke-width="0.5"/>
+<text x="20" y="11" class="lgnd">CAMPO CARTAGENA (4)</text>
+</g>
+<g transform="translate(510,46)">
+<rect width="14" height="14" fill="#a8c0cc" stroke="#5a3818" stroke-width="0.5"/>
+<text x="20" y="11" class="lgnd">MAR MENOR (1)</text>
+</g>
+</g>
+
+</svg>
