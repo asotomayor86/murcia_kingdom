@@ -5,6 +5,8 @@ export interface Anuncio {
   titulo: string;
   subtitulo?: string;
   color: string;
+  /** Emoji grande mostrado sobre el título (p. ej. resultado de batalla). */
+  icono?: string;
   /** Cambios de fase: fundido más rápido que el cambio de turno. */
   rapido?: boolean;
 }
@@ -21,6 +23,11 @@ export function AnuncioFase({ anuncio }: { anuncio: Anuncio | null }) {
     >
       <div className="anuncio-fase-velo absolute inset-0" />
       <div className="relative px-6">
+        {anuncio.icono && (
+          <div className="anuncio-icono mb-1 text-6xl sm:text-7xl md:text-8xl" aria-hidden>
+            {anuncio.icono}
+          </div>
+        )}
         <div
           className="anuncio-titulo whitespace-pre-line font-title text-4xl leading-tight tracking-wider sm:text-5xl md:text-6xl"
           style={{ color: anuncio.color }}

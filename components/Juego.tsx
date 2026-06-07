@@ -101,87 +101,129 @@ export function Juego({ onSalir, banner }: Props) {
   }, [partida?.ocupacion]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // 2. Disparar animaciones sólo cuando ningún diálogo está bloqueando el mapa.
+  // En una batalla resuelta: primero el cartel grande VICTORIA/DERROTA (según la
+  // perspectiva de quien mira) y, tras él, las animaciones de territorio
+  // (mancha de aceite + números de incremento/decremento).
   useEffect(() => {
     if (!partida) return;
     if (partida.preguntaActiva) return;
     if (partida.conquistaPendiente) return;
 
-    // (a) Cambios de propietario: mancha de aceite + anillos expansivos.
-    if (pendientesAnimacionRef.current.size > 0) {
-      const entradas = Array.from(pendientesAnimacionRef.current.entries());
-      pendientesAnimacionRef.current = new Map();
-      const ids = entradas.map(([id]) => id);
-      setConquistasAnim((prev) => {
-        const next = new Map(prev);
-        for (const [id, de] of entradas) next.set(id, de);
-        return next;
-      });
-      setRecienConquistados((prev) => {
-        const next = new Set(prev);
-        for (const id of ids) next.add(id);
-        return next;
-      });
-      // La mancha termina antes (0.85s) que los anillos (1.1s).
-      setTimeout(() => {
+    // Capturamos y limpiamos los refs ya, para no perderlos durante el retardo.
+    const snap = batallaSnapshotRef.current;
+    batallaSnapshotRef.current = null;
+    const entradas = Array.from(pendientesAnimacionRef.current.entries());
+    pendientesAnimacionRef.current = new Map();
+    if (!snap && entradas.length === 0) return;
+
+    // (a) mancha de aceite + (b) números de combate flotantes.
+    const animarTerritorios = () => {
+      if (entradas.length > 0) {
+        const ids = entradas.map(([id]) => id);
         setConquistasAnim((prev) => {
           const next = new Map(prev);
-          for (const id of ids) next.delete(id);
+          for (const [id, de] of entradas) next.set(id, de);
           return next;
         });
-      }, 880);
-      setTimeout(() => {
         setRecienConquistados((prev) => {
           const next = new Set(prev);
-          for (const id of ids) next.delete(id);
+          for (const id of ids) next.add(id);
           return next;
         });
-      }, 1400);
-    }
-
-    // (b) Resultado de batalla: números de combate flotantes.
-    const snap = batallaSnapshotRef.current;
-    if (snap) {
-      batallaSnapshotRef.current = null;
-      const nums: NumeroCombate[] = [];
-      const defAhora = partida.ocupacion[snap.defensor];
-      const conquistado = defAhora.jugador !== snap.duenoDefensor;
-      if (conquistado) {
-        // Guarnición que toma el municipio (la mancha de aceite hace el resto).
-        nums.push({
-          key: ++numeroIdRef.current,
-          territorio: snap.defensor,
-          texto: `+${defAhora.fichas}`,
-          tipo: 'gano',
-        });
-      } else {
-        // El atacante fue repelido: bajan sus tropas, sube el defensor.
-        const dAtacante = partida.ocupacion[snap.atacante].fichas - snap.fichasAtacante;
-        if (dAtacante < 0) {
-          nums.push({
-            key: ++numeroIdRef.current,
-            territorio: snap.atacante,
-            texto: `${dAtacante}`,
-            tipo: 'perdida',
+        setTimeout(() => {
+          setConquistasAnim((prev) => {
+            const next = new Map(prev);
+            for (const id of ids) next.delete(id);
+            return next;
           });
-        }
-        const dDefensor = defAhora.fichas - snap.fichasDefensor;
-        if (dDefensor > 0) {
+        }, 880);
+        setTimeout(() => {
+          setRecienConquistados((prev) => {
+            const next = new Set(prev);
+            for (const id of ids) next.delete(id);
+            return next;
+          });
+        }, 1400);
+      }
+
+      if (snap) {
+        const nums: NumeroCombate[] = [];
+        const defAhora = partida.ocupacion[snap.defensor];
+        const conquistado = defAhora.jugador !== snap.duenoDefensor;
+        if (conquistado) {
           nums.push({
             key: ++numeroIdRef.current,
             territorio: snap.defensor,
-            texto: `+${dDefensor}`,
+            texto: `+${defAhora.fichas}`,
             tipo: 'gano',
           });
+        } else {
+          const dAtacante = partida.ocupacion[snap.atacante].fichas - snap.fichasAtacante;
+          if (dAtacante < 0) {
+            nums.push({
+              key: ++numeroIdRef.current,
+              territorio: snap.atacante,
+              texto: `${dAtacante}`,
+              tipo: 'perdida',
+            });
+          }
+          const dDefensor = defAhora.fichas - snap.fichasDefensor;
+          if (dDefensor > 0) {
+            nums.push({
+              key: ++numeroIdRef.current,
+              territorio: snap.defensor,
+              texto: `+${dDefensor}`,
+              tipo: 'gano',
+            });
+          }
+        }
+        if (nums.length > 0) {
+          setNumerosCombate((prev) => [...prev, ...nums]);
+          const keys = new Set(nums.map((n) => n.key));
+          setTimeout(() => {
+            setNumerosCombate((prev) => prev.filter((n) => !keys.has(n.key)));
+          }, 1600);
         }
       }
-      if (nums.length > 0) {
-        setNumerosCombate((prev) => [...prev, ...nums]);
-        const keys = new Set(nums.map((n) => n.key));
-        setTimeout(() => {
-          setNumerosCombate((prev) => prev.filter((n) => !keys.has(n.key)));
-        }, 1600);
-      }
+    };
+
+    if (snap) {
+      // Cartel grande de resultado, desde la perspectiva de quien mira la pantalla.
+      const defensorIdx = snap.duenoDefensor;
+      const atacanteIdx: IndiceJugador = defensorIdx === 0 ? 1 : 0;
+      const conquistado = partida.ocupacion[snap.defensor].jugador !== snap.duenoDefensor;
+      const ganadorBatalla: IndiceJugador = conquistado ? atacanteIdx : defensorIdx;
+      // Online: la perspectiva es mi jugador. Local (pantalla compartida): la del
+      // atacante, que es quien tiene el turno.
+      const viewerIdx: IndiceJugador =
+        modo === 'online' && miIndice !== null ? miIndice : partida.turnoActual;
+      const miVictoria = viewerIdx === ganadorBatalla;
+      const territorio = NOMBRES_TERRITORIO[snap.defensor];
+      const subtitulo = conquistado
+        ? miVictoria
+          ? `Has conquistado ${territorio}`
+          : `${territorio} ha caído`
+        : miVictoria
+          ? `Has defendido ${territorio}`
+          : `Ataque repelido en ${territorio}`;
+      const miKey = ++anuncioIdRef.current;
+      setAnuncio({
+        key: miKey,
+        titulo: miVictoria ? '¡VICTORIA!' : 'DERROTA',
+        subtitulo,
+        icono: miVictoria ? '🏆' : '🏳️',
+        color: COLOR_JUGADOR[viewerIdx],
+        rapido: true,
+      });
+      // El cartel se limpia solo si sigue siendo el nuestro (no pisar uno nuevo).
+      setTimeout(() => setAnuncio((a) => (a && a.key === miKey ? null : a)), 1700);
+      // Las animaciones de territorio entran cuando el cartel empieza a desvanecerse.
+      setTimeout(animarTerritorios, 1100);
+      return;
     }
+
+    // Cambio de propietario sin batalla (no debería ocurrir): animar de inmediato.
+    animarTerritorios();
   }, [partida?.preguntaActiva, partida?.conquistaPendiente, partida?.ocupacion]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // 3. Refuerzos: "+N" flotante por cada territorio donde aumentan las tropas.
