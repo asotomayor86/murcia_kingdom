@@ -12,8 +12,13 @@ export async function middleware(req: NextRequest) {
   if (!password) return NextResponse.next();
 
   const { pathname } = req.nextUrl;
-  // La propia pantalla de acceso y su endpoint quedan siempre abiertos.
+  // La pantalla de acceso y su endpoint quedan siempre abiertos.
   if (pathname === '/acceso' || pathname === '/api/acceso') {
+    return NextResponse.next();
+  }
+  // El área de admin tiene su propia clave (cookie rm_admin); se valida dentro
+  // de la página y sus endpoints, así que la eximimos de la puerta compartida.
+  if (pathname === '/admin' || pathname.startsWith('/api/admin')) {
     return NextResponse.next();
   }
 

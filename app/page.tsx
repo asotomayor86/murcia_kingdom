@@ -181,6 +181,17 @@ export default function PaginaMenu() {
             Cómo jugar
           </Boton>
         </div>
+
+        {hayOnline && (
+          <div className="mt-4 text-center">
+            <button
+              onClick={() => router.push('/admin')}
+              className="text-xs text-sepiaOscuro/40 underline-offset-2 transition hover:text-sepiaOscuro/70 hover:underline"
+            >
+              Administrar salas
+            </button>
+          </div>
+        )}
       </div>
 
       <Modal
