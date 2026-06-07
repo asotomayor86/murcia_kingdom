@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Territorio, EtiquetaTerritorio } from './Territorio';
 import { ADYACENCIAS, CENTROS, COMARCAS, TERRITORIO_IDS } from '@/lib/territorios';
 import { BORDE_EXTERIOR, FRONTERAS_COMARCA } from '@/lib/fronteras';
@@ -23,8 +23,55 @@ interface Props {
   conquistasAnim?: Map<TerritorioId, IndiceJugador>;
   numerosCombate?: NumeroCombate[];
   comarcaResaltada?: ComarcaId | null;
+  /** Pendón que avanza del territorio atacante al defensor al declararse un ataque. */
+  marcha?: { origen: TerritorioId; destino: TerritorioId; color: string; key: number } | null;
   onClickTerritorio?: (id: TerritorioId) => void;
   interactivo?: boolean;
+}
+
+// Pendón de batalla que se desplaza del territorio atacante al defensor.
+function MarchaAtaque({
+  origen,
+  destino,
+  color,
+}: {
+  origen: TerritorioId;
+  destino: TerritorioId;
+  color: string;
+}) {
+  const a = CENTROS[origen];
+  const b = CENTROS[destino];
+  const [pos, setPos] = useState({ x: a.x, y: a.y });
+  useEffect(() => {
+    // Doble rAF: garantiza que el navegador pinta el origen antes de transicionar.
+    let id2 = 0;
+    const id1 = requestAnimationFrame(() => {
+      id2 = requestAnimationFrame(() => setPos({ x: b.x, y: b.y }));
+    });
+    return () => {
+      cancelAnimationFrame(id1);
+      cancelAnimationFrame(id2);
+    };
+  }, [a.x, a.y, b.x, b.y]);
+  return (
+    <g className="marcha-fade" style={{ pointerEvents: 'none' }}>
+      <line
+        x1={a.x}
+        y1={a.y}
+        x2={b.x}
+        y2={b.y}
+        stroke={color}
+        strokeWidth={2.5}
+        strokeDasharray="5 6"
+        opacity={0.55}
+      />
+      <g style={{ transform: `translate(${pos.x}px, ${pos.y}px)`, transition: 'transform 1.1s ease-in-out' }}>
+        <line x1={0} y1={-17} x2={0} y2={13} stroke="#3d2817" strokeWidth={2.5} strokeLinecap="round" />
+        <circle cx={0} cy={-17} r={2.4} fill="#3d2817" />
+        <path d="M0,-16 L20,-11 L0,-6 Z" fill={color} stroke="#3d2817" strokeWidth={1.2} strokeLinejoin="round" />
+      </g>
+    </g>
+  );
 }
 
 export function MapaMurcia({
@@ -36,6 +83,7 @@ export function MapaMurcia({
   conquistasAnim,
   numerosCombate,
   comarcaResaltada,
+  marcha,
   onClickTerritorio,
   interactivo = true,
 }: Props) {
@@ -161,6 +209,16 @@ export function MapaMurcia({
           </g>
         );
       })}
+
+      {/* Capa 5: marcha de tropas (pendón) al declararse un ataque */}
+      {marcha && (
+        <MarchaAtaque
+          key={marcha.key}
+          origen={marcha.origen}
+          destino={marcha.destino}
+          color={marcha.color}
+        />
+      )}
     </svg>
   );
 }

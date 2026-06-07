@@ -154,6 +154,18 @@ button:focus-visible,
   pointer-events: none;
 }
 
+/* Marcha de tropas (pendón) al declararse un ataque: aparece y se desvanece */
+@keyframes marcha-fade {
+  0% { opacity: 0; }
+  14% { opacity: 1; }
+  86% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+.marcha-fade {
+  animation: marcha-fade 1.2s ease-in-out forwards;
+}
+
 .numero-combate text {
   font-family: 'Cinzel', 'EB Garamond', serif;
   font-weight: 700;

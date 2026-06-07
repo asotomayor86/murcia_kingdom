@@ -58,6 +58,10 @@ export function Juego({ onSalir, onVolver, banner }: Props) {
   // Mientras se muestra el cartel VICTORIA/DERROTA de una conquista, retenemos el
   // diálogo de mover tropas para que el cartel salga antes.
   const [bloqueoConquista, setBloqueoConquista] = useState(false);
+  // Pendón que avanza del territorio atacante al defensor al declararse un ataque.
+  const [marcha, setMarcha] = useState<
+    { origen: TerritorioId; destino: TerritorioId; color: string; key: number } | null
+  >(null);
   const faseAnteriorRef = useRef<Fase | null>(null);
   const anuncioIdRef = useRef(0);
   const ocupacionAnteriorRef = useRef<Record<TerritorioId, { jugador: IndiceJugador; fichas: number }> | null>(null);
@@ -77,6 +81,9 @@ export function Juego({ onSalir, onVolver, banner }: Props) {
   // Evita repetir el cartel de resultado de una misma batalla (p. ej. en conquista,
   // que se anuncia al caer el territorio y no de nuevo tras mover tropas).
   const anuncioBatallaHechoRef = useRef(false);
+  // Control de la animación de marcha (una por ataque, identificado por iniciadoEn).
+  const marchaHechaRef = useRef<number | null>(null);
+  const marchaIdRef = useRef(0);
 
   // Cartel a tablero completo con el resultado de la batalla, desde la perspectiva
   // de quien mira (online: mi jugador; local: el atacante, que tiene el turno).
@@ -260,6 +267,24 @@ export function Juego({ onSalir, onVolver, banner }: Props) {
     setBloqueoConquista(true);
     setTimeout(() => setBloqueoConquista(false), 1500);
   }, [partida?.conquistaPendiente]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // 2c. Al declararse un ataque (pregunta nueva, aún sin responder), un pendón
+  // avanza del territorio atacante al defensor. Lo ven ambos jugadores (el estado
+  // se sincroniza). Mientras dura, se retiene el diálogo de la pregunta.
+  useEffect(() => {
+    const pa = partida?.preguntaActiva;
+    if (!pa || pa.respuesta != null) return;
+    if (marchaHechaRef.current === pa.iniciadoEn) return; // ya animado este ataque
+    marchaHechaRef.current = pa.iniciadoEn;
+    const key = ++marchaIdRef.current;
+    setMarcha({
+      origen: pa.territorioAtacante,
+      destino: pa.territorioDefensor,
+      color: COLOR_JUGADOR[partida!.turnoActual],
+      key,
+    });
+    setTimeout(() => setMarcha((m) => (m && m.key === key ? null : m)), 1200);
+  }, [partida?.preguntaActiva?.iniciadoEn, partida?.preguntaActiva?.respuesta]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // 3. Refuerzos: "+N" flotante por cada territorio donde aumentan las tropas.
   // Funciona para el jugador que coloca y para el rival que lo observa (online),
@@ -553,6 +578,7 @@ export function Juego({ onSalir, onVolver, banner }: Props) {
             conquistasAnim={conquistasAnim}
             numerosCombate={numerosCombate}
             comarcaResaltada={comarcaResaltada}
+            marcha={marcha}
             onClickTerritorio={handleClickTerritorio}
             interactivo={
               interactivo &&
@@ -604,7 +630,7 @@ export function Juego({ onSalir, onVolver, banner }: Props) {
       />
 
       <DialogoPregunta
-        abierto={partida.preguntaActiva !== null}
+        abierto={partida.preguntaActiva !== null && marcha === null}
         pendiente={partida.preguntaActiva}
         pregunta={preguntaActual}
         defensorIndice={otro}
