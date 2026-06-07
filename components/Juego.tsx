@@ -64,7 +64,7 @@ export function Juego({ onSalir, onVolver, banner }: Props) {
   const [bloqueoConquista, setBloqueoConquista] = useState(false);
   // Pendón que avanza del territorio atacante al defensor al declararse un ataque.
   const [marcha, setMarcha] = useState<
-    { origen: TerritorioId; destino: TerritorioId; color: string; key: number } | null
+    { origen: TerritorioId; destino: TerritorioId; color: string; cantidad: number; key: number } | null
   >(null);
   const faseAnteriorRef = useRef<Fase | null>(null);
   const anuncioIdRef = useRef(0);
@@ -286,6 +286,7 @@ export function Juego({ onSalir, onVolver, banner }: Props) {
       origen: pa.territorioAtacante,
       destino: pa.territorioDefensor,
       color: COLOR_JUGADOR[partida!.turnoActual],
+      cantidad: pa.atacantesN,
       key,
     });
     setTimeout(() => setMarcha((m) => (m && m.key === key ? null : m)), 1200);

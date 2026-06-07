@@ -23,21 +23,32 @@ interface Props {
   conquistasAnim?: Map<TerritorioId, IndiceJugador>;
   numerosCombate?: NumeroCombate[];
   comarcaResaltada?: ComarcaId | null;
-  /** Pendón que avanza del territorio atacante al defensor al declararse un ataque. */
-  marcha?: { origen: TerritorioId; destino: TerritorioId; color: string; key: number } | null;
+  /** Pendones que avanzan del territorio atacante al defensor al declararse un ataque. */
+  marcha?: {
+    origen: TerritorioId;
+    destino: TerritorioId;
+    color: string;
+    cantidad: number;
+    key: number;
+  } | null;
   onClickTerritorio?: (id: TerritorioId) => void;
   interactivo?: boolean;
 }
 
-// Pendón de batalla que se desplaza del territorio atacante al defensor.
+// Pendones de batalla (uno por tropa atacante, hasta un máximo) que avanzan en
+// formación del territorio atacante al defensor.
+const MAX_PENDONES = 9;
+
 function MarchaAtaque({
   origen,
   destino,
   color,
+  cantidad,
 }: {
   origen: TerritorioId;
   destino: TerritorioId;
   color: string;
+  cantidad: number;
 }) {
   const a = CENTROS[origen];
   const b = CENTROS[destino];
@@ -53,6 +64,28 @@ function MarchaAtaque({
       cancelAnimationFrame(id2);
     };
   }, [a.x, a.y, b.x, b.y]);
+
+  const n = Math.max(1, Math.min(MAX_PENDONES, cantidad));
+  // Vectores dirección y perpendicular para colocar los pendones en formación.
+  const dx = b.x - a.x;
+  const dy = b.y - a.y;
+  const len = Math.hypot(dx, dy) || 1;
+  const ux = dx / len;
+  const uy = dy / len;
+  const px = -uy;
+  const py = ux;
+  const pendones = Array.from({ length: n }, (_, i) => {
+    const fila = Math.floor(i / 3);
+    const col = (i % 3) - 1; // -1, 0, 1 (centro)
+    const side = col * 10;
+    const atras = -fila * 12;
+    return {
+      ox: px * side + ux * atras,
+      oy: py * side + uy * atras,
+      delay: fila * 0.08, // las filas traseras arrancan un poco después
+    };
+  });
+
   return (
     <g className="marcha-fade" style={{ pointerEvents: 'none' }}>
       <line
@@ -65,11 +98,19 @@ function MarchaAtaque({
         strokeDasharray="5 6"
         opacity={0.55}
       />
-      <g style={{ transform: `translate(${pos.x}px, ${pos.y}px)`, transition: 'transform 1.1s ease-in-out' }}>
-        <line x1={0} y1={-17} x2={0} y2={13} stroke="#3d2817" strokeWidth={2.5} strokeLinecap="round" />
-        <circle cx={0} cy={-17} r={2.4} fill="#3d2817" />
-        <path d="M0,-16 L20,-11 L0,-6 Z" fill={color} stroke="#3d2817" strokeWidth={1.2} strokeLinejoin="round" />
-      </g>
+      {pendones.map((p, i) => (
+        <g
+          key={i}
+          style={{
+            transform: `translate(${pos.x + p.ox}px, ${pos.y + p.oy}px)`,
+            transition: `transform 1s ease-in-out ${p.delay}s`,
+          }}
+        >
+          <line x1={0} y1={-15} x2={0} y2={11} stroke="#3d2817" strokeWidth={2.2} strokeLinecap="round" />
+          <circle cx={0} cy={-15} r={2.1} fill="#3d2817" />
+          <path d="M0,-14 L17,-9.5 L0,-5 Z" fill={color} stroke="#3d2817" strokeWidth={1.1} strokeLinejoin="round" />
+        </g>
+      ))}
     </g>
   );
 }
@@ -208,6 +249,7 @@ export function MapaMurcia({
           origen={marcha.origen}
           destino={marcha.destino}
           color={marcha.color}
+          cantidad={marcha.cantidad}
         />
       )}
     </svg>
