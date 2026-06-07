@@ -81,6 +81,7 @@ interface AccionesStore {
   terminarRefuerzos: () => void;
 
   declararAtaque: (origen: TerritorioId, destino: TerritorioId, N: number) => void;
+  registrarRespuesta: (opcion: 0 | 1 | 2 | 3 | 'timeout') => void;
   responderPregunta: (opcion: 0 | 1 | 2 | 3 | 'timeout') => void;
   moverTrasConquista: (cantidad: number) => void;
   limpiarResultadoPregunta: () => void;
@@ -562,6 +563,7 @@ export const useStore = create<Store>((set, get) => {
         nivel,
         tiempoLimiteS,
         iniciadoEn: Date.now(),
+        respuesta: null,
       };
       const nuevasUsadas: [Record<Nivel, number[]>, Record<Nivel, number[]>] = [
         partida.preguntasUsadas[0],
@@ -573,6 +575,17 @@ export const useStore = create<Store>((set, get) => {
         preguntaActiva: pendiente,
         preguntasUsadas: nuevasUsadas,
         ultimoResultadoPregunta: null,
+      });
+    },
+
+    registrarRespuesta: (opcion) => {
+      const partida = get().partida;
+      if (!partida || !partida.preguntaActiva) return;
+      if (partida.preguntaActiva.respuesta != null) return; // ya respondida
+      // Sincroniza la opción elegida (sin resolver aún) para que el rival la vea.
+      aplicar({
+        ...partida,
+        preguntaActiva: { ...partida.preguntaActiva, respuesta: opcion },
       });
     },
 

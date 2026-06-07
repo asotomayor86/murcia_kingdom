@@ -36,6 +36,7 @@ export function Juego({ onSalir, onVolver, banner }: Props) {
   const colocarRefuerzo = useStore((s) => s.colocarRefuerzo);
   const terminarRefuerzos = useStore((s) => s.terminarRefuerzos);
   const declararAtaque = useStore((s) => s.declararAtaque);
+  const registrarRespuesta = useStore((s) => s.registrarRespuesta);
   const responderPregunta = useStore((s) => s.responderPregunta);
   const moverTrasConquista = useStore((s) => s.moverTrasConquista);
   const terminarAtaques = useStore((s) => s.terminarAtaques);
@@ -54,6 +55,9 @@ export function Juego({ onSalir, onVolver, banner }: Props) {
   const [numerosCombate, setNumerosCombate] = useState<NumeroCombate[]>([]);
   const [comarcaResaltada, setComarcaResaltada] = useState<ComarcaId | null>(null);
   const [anuncio, setAnuncio] = useState<Anuncio | null>(null);
+  // Mientras se muestra el cartel VICTORIA/DERROTA de una conquista, retenemos el
+  // diálogo de mover tropas para que el cartel salga antes.
+  const [bloqueoConquista, setBloqueoConquista] = useState(false);
   const faseAnteriorRef = useRef<Fase | null>(null);
   const anuncioIdRef = useRef(0);
   const ocupacionAnteriorRef = useRef<Record<TerritorioId, { jugador: IndiceJugador; fichas: number }> | null>(null);
@@ -70,18 +74,55 @@ export function Juego({ onSalir, onVolver, banner }: Props) {
   const numeroIdRef = useRef(0);
   // Foto de tropas para animar "+N" flotante al colocar refuerzos / colocación inicial.
   const fichasRefuerzoRef = useRef<Record<TerritorioId, number> | null>(null);
+  // Evita repetir el cartel de resultado de una misma batalla (p. ej. en conquista,
+  // que se anuncia al caer el territorio y no de nuevo tras mover tropas).
+  const anuncioBatallaHechoRef = useRef(false);
+
+  // Cartel a tablero completo con el resultado de la batalla, desde la perspectiva
+  // de quien mira (online: mi jugador; local: el atacante, que tiene el turno).
+  const lanzarAnuncioBatalla = (
+    snap: { defensor: TerritorioId; duenoDefensor: IndiceJugador },
+    conquistado: boolean,
+    turnoActual: IndiceJugador,
+  ) => {
+    const defensorIdx = snap.duenoDefensor;
+    const atacanteIdx: IndiceJugador = defensorIdx === 0 ? 1 : 0;
+    const ganador: IndiceJugador = conquistado ? atacanteIdx : defensorIdx;
+    const viewerIdx: IndiceJugador =
+      modo === 'online' && miIndice !== null ? miIndice : turnoActual;
+    const miVictoria = viewerIdx === ganador;
+    const territorio = NOMBRES_TERRITORIO[snap.defensor];
+    const subtitulo = conquistado
+      ? miVictoria
+        ? `Has conquistado ${territorio}`
+        : `${territorio} ha caído`
+      : miVictoria
+        ? `Has defendido ${territorio}`
+        : `Ataque repelido en ${territorio}`;
+    const miKey = ++anuncioIdRef.current;
+    setAnuncio({
+      key: miKey,
+      titulo: miVictoria ? '¡VICTORIA!' : 'DERROTA',
+      subtitulo,
+      icono: miVictoria ? '🏆' : '🏳️',
+      color: COLOR_JUGADOR[viewerIdx],
+      rapido: true,
+    });
+    setTimeout(() => setAnuncio((a) => (a && a.key === miKey ? null : a)), 1700);
+  };
 
   // 0. Al iniciar una batalla, fotografiar las tropas implicadas (estado previo).
   useEffect(() => {
-    if (!partida?.preguntaActiva) return;
-    const pa = partida.preguntaActiva;
+    const pa = partida?.preguntaActiva;
+    if (!pa || pa.respuesta != null) return; // solo al inicio, antes de responder
     batallaSnapshotRef.current = {
       atacante: pa.territorioAtacante,
       defensor: pa.territorioDefensor,
-      fichasAtacante: partida.ocupacion[pa.territorioAtacante].fichas,
-      fichasDefensor: partida.ocupacion[pa.territorioDefensor].fichas,
-      duenoDefensor: partida.ocupacion[pa.territorioDefensor].jugador,
+      fichasAtacante: partida!.ocupacion[pa.territorioAtacante].fichas,
+      fichasDefensor: partida!.ocupacion[pa.territorioDefensor].fichas,
+      duenoDefensor: partida!.ocupacion[pa.territorioDefensor].jugador,
     };
+    anuncioBatallaHechoRef.current = false;
   }, [partida?.preguntaActiva]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // 1. Detectar cambios de propietario y encolarlos (guardando el dueño anterior).
@@ -190,43 +231,35 @@ export function Juego({ onSalir, onVolver, banner }: Props) {
     };
 
     if (snap) {
-      // Cartel grande de resultado, desde la perspectiva de quien mira la pantalla.
-      const defensorIdx = snap.duenoDefensor;
-      const atacanteIdx: IndiceJugador = defensorIdx === 0 ? 1 : 0;
-      const conquistado = partida.ocupacion[snap.defensor].jugador !== snap.duenoDefensor;
-      const ganadorBatalla: IndiceJugador = conquistado ? atacanteIdx : defensorIdx;
-      // Online: la perspectiva es mi jugador. Local (pantalla compartida): la del
-      // atacante, que es quien tiene el turno.
-      const viewerIdx: IndiceJugador =
-        modo === 'online' && miIndice !== null ? miIndice : partida.turnoActual;
-      const miVictoria = viewerIdx === ganadorBatalla;
-      const territorio = NOMBRES_TERRITORIO[snap.defensor];
-      const subtitulo = conquistado
-        ? miVictoria
-          ? `Has conquistado ${territorio}`
-          : `${territorio} ha caído`
-        : miVictoria
-          ? `Has defendido ${territorio}`
-          : `Ataque repelido en ${territorio}`;
-      const miKey = ++anuncioIdRef.current;
-      setAnuncio({
-        key: miKey,
-        titulo: miVictoria ? '¡VICTORIA!' : 'DERROTA',
-        subtitulo,
-        icono: miVictoria ? '🏆' : '🏳️',
-        color: COLOR_JUGADOR[viewerIdx],
-        rapido: true,
-      });
-      // El cartel se limpia solo si sigue siendo el nuestro (no pisar uno nuevo).
-      setTimeout(() => setAnuncio((a) => (a && a.key === miKey ? null : a)), 1700);
-      // Las animaciones de territorio entran cuando el cartel empieza a desvanecerse.
-      setTimeout(animarTerritorios, 1100);
+      if (anuncioBatallaHechoRef.current) {
+        // Conquista: el cartel VICTORIA/DERROTA ya se mostró al caer el territorio
+        // (antes de mover tropas). Aquí solo animamos los territorios.
+        anuncioBatallaHechoRef.current = false;
+        animarTerritorios();
+      } else {
+        // Ataque repelido: cartel de resultado y, tras él, las animaciones.
+        lanzarAnuncioBatalla(snap, false, partida.turnoActual);
+        setTimeout(animarTerritorios, 1100);
+      }
       return;
     }
 
     // Cambio de propietario sin batalla (no debería ocurrir): animar de inmediato.
     animarTerritorios();
   }, [partida?.preguntaActiva, partida?.conquistaPendiente, partida?.ocupacion]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // 2b. Conquista: al caer el territorio (antes de mover tropas) mostramos el cartel
+  // VICTORIA/DERROTA y retenemos el diálogo de mover tropas hasta que termine.
+  useEffect(() => {
+    if (!partida?.conquistaPendiente) return;
+    const snap = batallaSnapshotRef.current;
+    if (!snap) return; // sin batalla previa (p. ej. carga a media conquista): no gateamos
+    if (anuncioBatallaHechoRef.current) return; // ya anunciado
+    anuncioBatallaHechoRef.current = true;
+    lanzarAnuncioBatalla(snap, true, partida.turnoActual);
+    setBloqueoConquista(true);
+    setTimeout(() => setBloqueoConquista(false), 1500);
+  }, [partida?.conquistaPendiente]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // 3. Refuerzos: "+N" flotante por cada territorio donde aumentan las tropas.
   // Funciona para el jugador que coloca y para el rival que lo observa (online),
@@ -578,6 +611,10 @@ export function Juego({ onSalir, onVolver, banner }: Props) {
         defensorNombre={partida.jugadores[otro].nombre}
         atacanteNombre={jugadorActual.nombre}
         puedoResponder={soyDefensorPregunta}
+        onElegir={(opcion) => {
+          if (!soyDefensorPregunta) return;
+          registrarRespuesta(opcion);
+        }}
         onResponder={(opcion) => {
           if (!soyDefensorPregunta) return;
           responderPregunta(opcion);
@@ -586,7 +623,7 @@ export function Juego({ onSalir, onVolver, banner }: Props) {
       />
 
       <DialogoMoverConquista
-        abierto={partida.conquistaPendiente !== null && interactivo}
+        abierto={partida.conquistaPendiente !== null && interactivo && !bloqueoConquista}
         conquista={partida.conquistaPendiente}
         onConfirmar={(n) => moverTrasConquista(n)}
       />

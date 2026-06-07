@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { Modal } from './ui/Modal';
-import { Boton } from './ui/Boton';
 import { NOMBRES_TERRITORIO, COLOR_JUGADOR } from '@/lib/territorios';
 import type { IndiceJugador, Pregunta, PreguntaPendiente } from '@/lib/tipos';
 
@@ -14,6 +13,9 @@ interface Props {
   defensorNombre: string;
   atacanteNombre: string;
   puedoResponder?: boolean;
+  /** Registra la opción elegida (se sincroniza para que el rival la vea). */
+  onElegir: (opcion: 0 | 1 | 2 | 3 | 'timeout') => void;
+  /** Resuelve la batalla tras mostrar el resultado (solo quien responde). */
   onResponder: (opcion: 0 | 1 | 2 | 3 | 'timeout') => void;
 }
 
@@ -27,29 +29,32 @@ export function DialogoPregunta({
   defensorNombre,
   atacanteNombre,
   puedoResponder = true,
+  onElegir,
   onResponder,
 }: Props) {
   const [segundos, setSegundos] = useState(0);
-  const [respondida, setRespondida] = useState(false);
-  const [eleccion, setEleccion] = useState<0 | 1 | 2 | 3 | 'timeout' | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const onElegirRef = useRef(onElegir);
+  onElegirRef.current = onElegir;
+  const onResponderRef = useRef(onResponder);
+  onResponderRef.current = onResponder;
 
+  // La respuesta vive en el estado sincronizado: ambos jugadores la ven.
+  const respuesta = pendiente?.respuesta ?? null;
+  const respondida = respuesta != null;
+  const preguntaId = pendiente?.preguntaId ?? null;
+  const iniciadoEn = pendiente?.iniciadoEn ?? 0;
+  const tiempoLimiteS = pendiente?.tiempoLimiteS ?? 0;
+
+  // Cuenta atrás mientras no haya respuesta. Al agotarse, quien responde registra timeout.
   useEffect(() => {
-    if (!abierto || !pendiente) {
+    if (!abierto || preguntaId === null || respondida) {
       if (timerRef.current) clearInterval(timerRef.current);
       timerRef.current = null;
-      setRespondida(false);
-      setEleccion(null);
       return;
     }
-    setRespondida(false);
-    setEleccion(null);
-    const total = pendiente.tiempoLimiteS;
-    const inicio = pendiente.iniciadoEn;
-    const calc = () => {
-      const transcurridos = Math.floor((Date.now() - inicio) / 1000);
-      return Math.max(0, total - transcurridos);
-    };
+    const calc = () =>
+      Math.max(0, tiempoLimiteS - Math.floor((Date.now() - iniciadoEn) / 1000));
     setSegundos(calc());
     if (timerRef.current) clearInterval(timerRef.current);
     timerRef.current = setInterval(() => {
@@ -58,26 +63,21 @@ export function DialogoPregunta({
       if (s === 0) {
         if (timerRef.current) clearInterval(timerRef.current);
         timerRef.current = null;
-        if (puedoResponder) {
-          setEleccion('timeout');
-          setRespondida(true);
-        }
+        if (puedoResponder) onElegirRef.current('timeout');
       }
     }, 200);
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
       timerRef.current = null;
     };
-  }, [abierto, pendiente, puedoResponder]);
+  }, [abierto, preguntaId, respondida, iniciadoEn, tiempoLimiteS, puedoResponder]);
 
-  // Tras responder/timeout, mostrar resultado 3 segundos y luego enviar al store.
+  // Tras revelar la respuesta, esperar 3 s y resolver la batalla (solo quien responde).
   useEffect(() => {
-    if (!respondida) return;
-    const t = setTimeout(() => {
-      if (eleccion !== null) onResponder(eleccion);
-    }, 3000);
+    if (!abierto || !respondida || !puedoResponder || respuesta === null) return;
+    const t = setTimeout(() => onResponderRef.current(respuesta), 3000);
     return () => clearTimeout(t);
-  }, [respondida, eleccion, onResponder]);
+  }, [abierto, respondida, respuesta, puedoResponder, preguntaId]);
 
   if (!abierto || !pendiente || !pregunta) return null;
 
@@ -86,12 +86,8 @@ export function DialogoPregunta({
   const ratio = Math.max(0, Math.min(1, segundos / total));
 
   const elegir = (opc: 0 | 1 | 2 | 3) => {
-    if (respondida) return;
-    if (!puedoResponder) return;
-    setEleccion(opc);
-    setRespondida(true);
-    if (timerRef.current) clearInterval(timerRef.current);
-    timerRef.current = null;
+    if (respondida || !puedoResponder) return;
+    onElegirRef.current(opc);
   };
 
   return (
@@ -128,7 +124,7 @@ export function DialogoPregunta({
         {pregunta.opciones.map((op, i) => {
           const idx = i as 0 | 1 | 2 | 3;
           const esCorrecta = pregunta.correcta === idx;
-          const esElegida = eleccion === idx;
+          const esElegida = respuesta === idx;
           let estilo = 'bg-pergamino hover:bg-pergaminoOscuro';
           if (respondida) {
             if (esCorrecta) estilo = 'bg-green-200 ring-2 ring-green-600';
@@ -152,12 +148,12 @@ export function DialogoPregunta({
 
       {respondida && (
         <div className="mt-5 rounded border border-sepia/40 bg-pergaminoOscuro/40 p-3 text-sepiaOscuro">
-          <div className="text-sm">
-            {eleccion === 'timeout'
-              ? 'Tiempo agotado.'
-              : eleccion === pregunta.correcta
-                ? '¡Respuesta correcta!'
-                : 'Respuesta incorrecta.'}
+          <div className="text-sm font-semibold">
+            {respuesta === 'timeout'
+              ? `${defensorNombre} no respondió a tiempo.`
+              : respuesta === pregunta.correcta
+                ? `${defensorNombre} acertó.`
+                : `${defensorNombre} falló.`}
           </div>
           <div className="mt-1 text-sm italic">{pregunta.explicacion}</div>
         </div>

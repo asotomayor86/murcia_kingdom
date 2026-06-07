@@ -73,6 +73,11 @@ export interface PreguntaPendiente {
   nivel: Nivel;
   tiempoLimiteS: number;
   iniciadoEn: number;
+  /**
+   * Opción que ha pulsado el defensor (o 'timeout'). Se sincroniza para que el
+   * rival vea la respuesta antes de resolver la batalla. null = aún sin responder.
+   */
+  respuesta?: 0 | 1 | 2 | 3 | 'timeout' | null;
 }
 
 export interface ConquistaPendiente {
