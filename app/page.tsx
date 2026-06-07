@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Boton } from '@/components/ui/Boton';
 import { Modal } from '@/components/ui/Modal';
+import { ComoJugar } from '@/components/ComoJugar';
 import { listarBarajas, cargarBaraja, type InfoBaraja } from '@/lib/cargarBaraja';
 import { hayPartidaGuardada, borrar } from '@/lib/persistencia';
 import { useStore } from '@/lib/store';
@@ -345,28 +346,8 @@ export default function PaginaMenu() {
         </div>
       </Modal>
 
-      <Modal abierto={modal === 'ayuda'} titulo="Cómo jugar" onCerrar={() => setModal(null)} ancho="lg">
-        <div className="space-y-3 text-sm leading-relaxed text-sepiaOscuro">
-          <p>
-            Dos jugadores se reparten 26 territorios de la Región de Murcia y luchan por
-            controlarlos todos. En lugar de dados se usan <em>preguntas de cultura general</em>:
-            cuando atacas, el defensor debe responder.
-          </p>
-          <p>
-            Cada turno tiene tres fases: <strong>refuerzos</strong>, <strong>ataques</strong>{' '}
-            (todos los que quieras) y <strong>fortificación</strong>.
-          </p>
-          <p>
-            Modo <strong>local</strong>: ambos en el mismo dispositivo, os pasáis el ratón.
-            Modo <strong>online</strong>: cada uno desde su dispositivo, compartís el código
-            de la sala.
-          </p>
-        </div>
-        <div className="mt-4 flex justify-end">
-          <Boton variante="primario" onClick={() => setModal(null)}>
-            Entendido
-          </Boton>
-        </div>
+      <Modal abierto={modal === 'ayuda'} titulo="Cómo jugar" onCerrar={() => setModal(null)} ancho="xl">
+        <ComoJugar onCerrar={() => setModal(null)} />
       </Modal>
     </main>
   );
