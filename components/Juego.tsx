@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { MapaMurcia, type NumeroCombate } from './Map/MapaMurcia';
 import { PanelJugador } from './PanelJugador';
 import { PanelComarcas } from './PanelComarcas';
@@ -19,6 +19,10 @@ import { useStore, puedoActuar, partidaTerminada } from '@/lib/store';
 import { ADYACENCIAS, COLOR_JUGADOR, NOMBRES_TERRITORIO } from '@/lib/territorios';
 import { calcularPuntuacion, hayCadenaPropia, puedeAtacar } from '@/lib/reglas';
 import type { ComarcaId, Fase, IndiceJugador, TerritorioId } from '@/lib/tipos';
+
+// Layout effect en cliente (evita el parpadeo del diálogo antes de la marcha),
+// useEffect en SSR para no avisar.
+const useIsoLayoutEffect = typeof window !== 'undefined' ? useLayoutEffect : useEffect;
 
 interface Props {
   onSalir: () => void;
@@ -270,8 +274,9 @@ export function Juego({ onSalir, onVolver, banner }: Props) {
 
   // 2c. Al declararse un ataque (pregunta nueva, aún sin responder), un pendón
   // avanza del territorio atacante al defensor. Lo ven ambos jugadores (el estado
-  // se sincroniza). Mientras dura, se retiene el diálogo de la pregunta.
-  useEffect(() => {
+  // se sincroniza). Mientras dura, se retiene el diálogo de la pregunta. Usamos
+  // layout effect para fijar la marcha antes de pintar y que el diálogo no asome.
+  useIsoLayoutEffect(() => {
     const pa = partida?.preguntaActiva;
     if (!pa || pa.respuesta != null) return;
     if (marchaHechaRef.current === pa.iniciadoEn) return; // ya animado este ataque

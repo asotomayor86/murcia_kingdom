@@ -3,10 +3,19 @@
 import { useEffect, useState } from 'react';
 import { Modal } from './ui/Modal';
 import { Boton } from './ui/Boton';
-import { Slider } from './ui/Slider';
+import { Slider, type SegmentoSlider } from './ui/Slider';
 import { NOMBRES_TERRITORIO } from '@/lib/territorios';
 import { calcularNivelPregunta, tiempoLimitePorNivel } from '@/lib/reglas';
-import type { TerritorioId } from '@/lib/tipos';
+import type { Nivel, TerritorioId } from '@/lib/tipos';
+
+// Color por nivel de pregunta: verde (fácil para el defensor) → rojo (nivel 5).
+const COLOR_NIVEL: Record<Nivel, string> = {
+  1: '#3f7d3f',
+  2: '#8fae3a',
+  3: '#d4a017',
+  4: '#d2691e',
+  5: '#a83737',
+};
 
 interface Props {
   abierto: boolean;
@@ -40,6 +49,15 @@ export function DialogoAtaque({
   const nivel = calcularNivelPregunta(nClamped, fichasDefensor);
   const tiempo = tiempoLimitePorNivel(nivel);
 
+  // Tramos de color del slider según el nivel de pregunta que toca para cada N.
+  const segmentos: SegmentoSlider[] = [];
+  for (let N = 1; N <= maxN; N++) {
+    const nv = calcularNivelPregunta(N, fichasDefensor);
+    const ult = segmentos[segmentos.length - 1];
+    if (ult && ult.etiqueta === `Nv ${nv}`) ult.hasta = N;
+    else segmentos.push({ desde: N, hasta: N, color: COLOR_NIVEL[nv], etiqueta: `Nv ${nv}` });
+  }
+
   return (
     <Modal abierto={abierto} titulo="Declarar ataque" onCerrar={onCancelar} ancho="md">
       <p className="mb-3 text-sepiaOscuro">
@@ -62,7 +80,13 @@ export function DialogoAtaque({
         value={nClamped}
         onChange={setN}
         etiqueta={`Atacantes (1 a ${maxN})`}
+        segmentos={segmentos}
       />
+      <p className="mt-1 text-xs text-sepiaOscuro/60">
+        Color del slider = dificultad de la pregunta para el defensor (verde fácil →{' '}
+        <span className="font-semibold" style={{ color: COLOR_NIVEL[5] }}>rojo nivel 5</span>).
+        Cuantos más atacantes, más difícil para él.
+      </p>
       <div className="mt-4 rounded border border-sepia/40 bg-pergamino p-3 text-sepiaOscuro">
         <div className="text-sm">
           Pregunta prevista: <span className="font-bold">nivel {nivel}</span>

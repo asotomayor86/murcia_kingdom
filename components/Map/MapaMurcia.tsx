@@ -104,7 +104,7 @@ export function MapaMurcia({
 
   return (
     <svg
-      viewBox="0 0 720 740"
+      viewBox="0 0 720 640"
       xmlns="http://www.w3.org/2000/svg"
       role="img"
       aria-label="Mapa de la Región de Murcia"
@@ -118,18 +118,16 @@ export function MapaMurcia({
           <circle cx="40" cy="100" r="2" fill="#d6c089" opacity="0.55" />
         </pattern>
       </defs>
-      <rect width="720" height="740" fill="url(#pergaminoTextura)" />
+      <rect width="720" height="640" fill="url(#pergaminoTextura)" />
       <g opacity="0.13">
         <ellipse cx="100" cy="110" rx="90" ry="35" fill="#8a6438" />
         <ellipse cx="620" cy="220" rx="60" ry="45" fill="#8a6438" />
         <ellipse cx="40" cy="450" rx="35" ry="80" fill="#8a6438" />
-        <ellipse cx="350" cy="710" rx="140" ry="25" fill="#8a6438" />
-        <ellipse cx="600" cy="680" rx="60" ry="20" fill="#8a6438" />
         <ellipse cx="380" cy="330" rx="50" ry="25" fill="#8a6438" />
       </g>
 
-      <rect x="14" y="14" width="692" height="712" fill="none" stroke="#5a3818" strokeWidth={2.5} />
-      <rect x="22" y="22" width="676" height="696" fill="none" stroke="#5a3818" strokeWidth={0.6} />
+      <rect x="14" y="14" width="692" height="612" fill="none" stroke="#5a3818" strokeWidth={2.5} />
+      <rect x="22" y="22" width="676" height="596" fill="none" stroke="#5a3818" strokeWidth={0.6} />
 
       <text x="360" y="62" className="map-title">REINO DE MVRCIA</text>
       <text x="360" y="86" className="map-subtitle">— Mapa de Conquista en XXVI Territorios —</text>
@@ -151,13 +149,6 @@ export function MapaMurcia({
         fill="none"
         opacity="0.7"
       />
-
-      {/* Rosa de los vientos */}
-      <g transform="translate(640, 660)">
-        <circle r="22" fill="#fff8e8" stroke="#5a3818" strokeWidth={1.2} />
-        <path d="M0,-20 L4,-4 L20,0 L4,4 L0,20 L-4,4 L-20,0 L-4,-4 Z" fill="#5a3818" />
-        <text y="-26" textAnchor="middle" className="map-compass">N</text>
-      </g>
 
       {/* Capa 1: rellenos de los municipios */}
       {TERRITORIO_IDS.map((id) => (

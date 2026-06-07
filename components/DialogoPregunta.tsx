@@ -125,23 +125,44 @@ export function DialogoPregunta({
           const idx = i as 0 | 1 | 2 | 3;
           const esCorrecta = pregunta.correcta === idx;
           const esElegida = respuesta === idx;
-          let estilo = 'bg-pergamino hover:bg-pergaminoOscuro';
+          // Solo quien responde y aún no ha respondido puede pulsar. Para el rival
+          // (atacante) las opciones son elementos estáticos, no seleccionables.
+          const interactiva = puedoResponder && !respondida;
+          let estilo = 'bg-pergamino';
           if (respondida) {
             if (esCorrecta) estilo = 'bg-green-200 ring-2 ring-green-600';
             else if (esElegida) estilo = 'bg-red-200 ring-2 ring-red-600';
             else estilo = 'bg-pergamino opacity-70';
+          } else if (!interactiva) {
+            estilo = 'bg-pergamino opacity-70';
           }
-          return (
-            <button
-              key={i}
-              disabled={respondida || !puedoResponder}
-              onClick={() => elegir(idx)}
-              className={`flex items-start gap-3 rounded-lg border-2 border-sepia/60 p-3 text-left text-sepiaOscuro transition ${estilo} ${!puedoResponder && !respondida ? 'opacity-70' : ''}`}
-              aria-label={`Opción ${LETRAS[i]}: ${op}`}
-            >
+          const claseBase = `flex items-start gap-3 rounded-lg border-2 border-sepia/60 p-3 text-left text-sepiaOscuro transition ${estilo}`;
+          const contenido = (
+            <>
               <span className="font-title text-lg font-bold">{LETRAS[i]}</span>
               <span className="font-serif text-base">{op}</span>
-            </button>
+            </>
+          );
+          if (interactiva) {
+            return (
+              <button
+                key={i}
+                onClick={() => elegir(idx)}
+                className={`${claseBase} hover:bg-pergaminoOscuro`}
+                aria-label={`Opción ${LETRAS[i]}: ${op}`}
+              >
+                {contenido}
+              </button>
+            );
+          }
+          return (
+            <div
+              key={i}
+              className={`${claseBase} cursor-default select-none`}
+              aria-label={`Opción ${LETRAS[i]}: ${op}`}
+            >
+              {contenido}
+            </div>
           );
         })}
       </div>
