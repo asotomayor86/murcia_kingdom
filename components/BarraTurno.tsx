@@ -9,6 +9,7 @@ interface Props {
   onTerminarRefuerzos: () => void;
   onTerminarAtaques: () => void;
   onPasarFortificacion: () => void;
+  onVolver: () => void;
   onAbandonar: () => void;
 }
 
@@ -24,6 +25,7 @@ export function BarraTurno({
   onTerminarRefuerzos,
   onTerminarAtaques,
   onPasarFortificacion,
+  onVolver,
   onAbandonar,
 }: Props) {
   const j = partida.jugadores[partida.turnoActual];
@@ -77,6 +79,9 @@ export function BarraTurno({
             Pasar fortificación
           </Boton>
         )}
+        <Boton variante="secundario" onClick={onVolver}>
+          Volver al menú
+        </Boton>
         <Boton variante="fantasma" onClick={onAbandonar}>
           Abandonar
         </Boton>

@@ -245,6 +245,15 @@ export default function PaginaOnline() {
     router.replace('/');
   };
 
+  // Volver al menú conservando la sesión: se puede retomar volviendo a entrar con
+  // el código de la sala (la partida sigue viva en el servidor).
+  const volver = () => {
+    suscripcionRef.current?.desuscribir();
+    suscripcionRef.current = null;
+    salirDeSala();
+    router.replace('/');
+  };
+
   const colorMio = miIndice !== null ? COLOR_JUGADOR[miIndice] : '#5a3818';
 
   if (esperandoRival) {
@@ -276,6 +285,7 @@ export default function PaginaOnline() {
   return (
     <Juego
       onSalir={salir}
+      onVolver={volver}
       banner={
         modo === 'online' && miIndice !== null ? (
           <div

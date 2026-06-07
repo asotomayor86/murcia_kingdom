@@ -38,6 +38,10 @@ export default function PaginaPartida() {
         abandonarPartida();
         router.replace('/');
       }}
+      onVolver={() => {
+        // El guardado local persiste; se podrá continuar desde el menú.
+        router.replace('/');
+      }}
     />
   );
 }

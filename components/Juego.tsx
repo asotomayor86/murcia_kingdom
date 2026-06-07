@@ -22,10 +22,12 @@ import type { ComarcaId, Fase, IndiceJugador, TerritorioId } from '@/lib/tipos';
 
 interface Props {
   onSalir: () => void;
+  /** Volver al menú conservando la partida (para retomarla luego). */
+  onVolver: () => void;
   banner?: React.ReactNode;
 }
 
-export function Juego({ onSalir, banner }: Props) {
+export function Juego({ onSalir, onVolver, banner }: Props) {
   const partida = useStore((s) => s.partida);
   const modo = useStore((s) => s.modo);
   const miIndice = useStore((s) => s.miIndice);
@@ -485,6 +487,7 @@ export function Juego({ onSalir, banner }: Props) {
           onTerminarRefuerzos={interactivo ? terminarRefuerzos : () => undefined}
           onTerminarAtaques={interactivo ? terminarAtaques : () => undefined}
           onPasarFortificacion={interactivo ? pasarFortificacion : () => undefined}
+          onVolver={onVolver}
           onAbandonar={() => setConfirmarSalir(true)}
         />
       </div>
@@ -624,8 +627,8 @@ export function Juego({ onSalir, banner }: Props) {
       >
         <p className="text-sepiaOscuro">
           {modo === 'online'
-            ? '¿Salir de esta sala? La partida sigue para el otro jugador.'
-            : '¿Seguro que quieres abandonar la partida? Se borrará el guardado.'}
+            ? '¿Salir de esta sala? Olvidarás tu sitio y no podrás retomarla (la partida sigue para el otro jugador). Si solo quieres descansar, usa «Volver al menú».'
+            : '¿Seguro que quieres abandonar la partida? Se borrará el guardado y no podrás continuarla. Si solo quieres dejarla a medias, usa «Volver al menú».'}
         </p>
         <div className="mt-4 flex justify-end gap-2">
           <Boton variante="fantasma" onClick={() => setConfirmarSalir(false)}>
